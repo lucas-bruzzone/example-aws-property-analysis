@@ -1,36 +1,12 @@
-# Role IAM para Lambda
-resource "aws_iam_role" "lambda" {
-  name = "${var.project_name}-lambda-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
+# Use existing role from phase 1 and add specific policies
+data "aws_iam_role" "lambda_analysis" {
+  name = data.terraform_remote_state.analysis_infra.outputs.lambda_analysis_role_name
 }
 
-# Policies para Lambda
-resource "aws_iam_role_policy_attachment" "lambda_basic" {
-  role       = aws_iam_role.lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_vpc" {
-  role       = aws_iam_role.lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-}
-
-# Policy inline para DynamoDB
-resource "aws_iam_role_policy" "lambda_dynamodb" {
-  name = "${var.project_name}-lambda-dynamodb-policy"
-  role = aws_iam_role.lambda.id
+# Additional policy for external API calls
+resource "aws_iam_role_policy" "lambda_external_apis" {
+  name = "${var.project_name}-lambda-external-apis-policy"
+  role = data.aws_iam_role.lambda_analysis.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -38,14 +14,22 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
       {
         Effect = "Allow"
         Action = [
-          "dynamodb:GetItem",
-          "dynamodb:PutItem",
-          "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:Query",
-          "dynamodb:Scan"
+          "secretsmanager:GetSecretValue"
         ]
-        Resource = data.terraform_remote_state.dynamoDB.outputs.table_arn
+        Resource = [
+          "arn:aws:secretsmanager:${var.aws_region}:*:secret:*nasa*",
+          "arn:aws:secretsmanager:${var.aws_region}:*:secret:*sentinel*",
+          "arn:aws:secretsmanager:${var.aws_region}:*:secret:*weather*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
       }
     ]
   })
