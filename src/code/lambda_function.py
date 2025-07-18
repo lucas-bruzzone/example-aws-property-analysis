@@ -4,7 +4,6 @@ import os
 import logging
 from datetime import datetime, timezone
 from typing import Dict, Any
-import requests
 from decimal import Decimal
 
 # Configure logging
