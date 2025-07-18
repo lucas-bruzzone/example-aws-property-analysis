@@ -19,6 +19,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Setup Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -27,31 +32,29 @@ jobs:
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: ~1.0
-
+      
     - name: Terraform Format
       run: |
-        cd terraform
+        cd src/terraform
         terraform fmt -check
 
     - name: Terraform Init
       run: |
-        cd terraform
+        cd src/terraform
         terraform init
 
     - name: Terraform Validate
       run: |
-        cd terraform
+        cd src/terraform
         terraform validate
 
     - name: Terraform Plan
       run: |
-        cd terraform
+        cd src/terraform
         terraform plan -var-file="tfvars/devops.tfvars" -no-color
       
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: |
-        cd terraform
+        cd src/terraform
         terraform apply -var-file="tfvars/devops.tfvars" -auto-approve -no-color
