@@ -1,9 +1,2 @@
 # Geospatial Analysis Dependencies
-rasterio
-geopandas
-shapely
-fiona
-pyproj
-rtree
 numpy
-pandas
