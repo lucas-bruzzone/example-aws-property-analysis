@@ -5,7 +5,7 @@ module "lambda_geospatial" {
   function_name = "${var.project_name}-${var.environment}"
   source_path   = "../code"
   layers        = [module.lambda_geospatial_layer.lambda_layer_arn]
-  handler       = "geospatial_analysis.lambda_handler"
+  handler       = "lambda_function.lambda_handler"
   runtime       = "python3.11"
   timeout       = 300 # 15 minutes
   memory_size   = 512 # Max for geospatial processing
